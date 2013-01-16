@@ -22,6 +22,8 @@ namespace SharpTunes
         public string CurrentAlbumArt { get; set; }
         public TimeSpan CurrentTime { get; set; }
         public TimeSpan TotalTime { get; set; }
+        public bool IsPlaying { get; set; }
+
         public double SeekMilliseconds { 
             get
             {
@@ -92,18 +94,20 @@ namespace SharpTunes
         public Player Play()
         {
             this.player.Play();
+            this.IsPlaying = true;
             return this;
         }
 
         public Player Pause()
         {
+            this.IsPlaying = false;
             this.player.Pause();
             return this;
         }
 
         public Player Stop()
         {
-            player.Pause();
+            this.Pause();
             this.mp3.Seek(0, SeekOrigin.Begin);
             return this;
         }
