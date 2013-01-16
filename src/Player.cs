@@ -1,7 +1,9 @@
 ﻿using System;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Timers;
+using Id3;
 using NAudio.Wave;
 
 namespace SharpTunes
@@ -10,6 +12,9 @@ namespace SharpTunes
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
+        public string CurrentTitle { get; set; }
+        public string CurrentAlbum { get; set; }
+        public string CurrentArtist { get; set; }
         public TimeSpan CurrentTime { get; set; }
         public TimeSpan TotalTime { get; set; }
         public double SeekMilliseconds { 
@@ -46,6 +51,14 @@ namespace SharpTunes
             if (this.mp3 != null)
             {
                 this.mp3.Close();
+            }
+
+            using (var tagReader = new Mp3File(fileName))
+            {
+                var tag = tagReader.GetTag(Id3TagFamily.FileStartTag);
+                this.CurrentTitle = tag.Title.Value;
+                this.CurrentArtist = tag.Artists.Values.First();
+                this.CurrentAlbum = tag.Album.Value;
             }
 
             this.mp3 = new Mp3FileReader(fileName);

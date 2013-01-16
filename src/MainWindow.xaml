@@ -52,6 +52,8 @@
             </TextBlock>
             <ProgressBar Name="uxProgress" Value="{Binding Player.SeekMilliseconds, Mode=OneWay}" Maximum="{Binding Player.TotalTime.TotalMilliseconds, Mode=OneWay}" Style="{StaticResource ProgressBarStyle}" MouseLeftButtonDown="uxProgressMouseLeftButtonDown" MouseMove="uxProgressMouseMove" />
         </DockPanel>
+        <TextBlock DockPanel.Dock="Bottom" Text="{Binding Player.CurrentArtist}" Foreground="#eee"></TextBlock>
+        <TextBlock DockPanel.Dock="Bottom" Text="{Binding Player.CurrentTitle}" Foreground="#eee"></TextBlock>
         <Grid></Grid>
     </DockPanel>
 </Controls:MetroWindow>
