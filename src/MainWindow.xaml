@@ -34,26 +34,29 @@
 
     <DockPanel>
         <DockPanel DockPanel.Dock="Bottom">
-            <TextBlock DockPanel.Dock="Left" Width="50" Foreground="#eee" TextAlignment="Center" VerticalAlignment="Center">
-                <TextBlock.Text>
-                    <MultiBinding StringFormat="{}{0:D2}:{1:D2}">
-                        <Binding Path="Player.CurrentTime.Minutes" />
-                        <Binding Path="Player.CurrentTime.Seconds" />
-                    </MultiBinding>
-                </TextBlock.Text>
-            </TextBlock>
-            <TextBlock DockPanel.Dock="Right" Width="50" Foreground="#eee" TextAlignment="Center" VerticalAlignment="Center">
-                <TextBlock.Text>
-                    <MultiBinding StringFormat="{}{0:D2}:{1:D2}">
-                        <Binding Path="Player.TotalTime.Minutes" />
-                        <Binding Path="Player.TotalTime.Seconds" />
-                    </MultiBinding>
-                </TextBlock.Text>
-            </TextBlock>
-            <ProgressBar Name="uxProgress" Value="{Binding Player.SeekMilliseconds, Mode=OneWay}" Maximum="{Binding Player.TotalTime.TotalMilliseconds, Mode=OneWay}" Style="{StaticResource ProgressBarStyle}" MouseLeftButtonDown="uxProgressMouseLeftButtonDown" MouseMove="uxProgressMouseMove" />
+            <Image DockPanel.Dock="Left" Source="{Binding Player.CurrentAlbumArt}" Width="64" Height="64" />
+            <DockPanel DockPanel.Dock="Bottom">
+                <TextBlock DockPanel.Dock="Left" Width="50" Foreground="#eee" TextAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock.Text>
+                        <MultiBinding StringFormat="{}{0:D2}:{1:D2}">
+                            <Binding Path="Player.CurrentTime.Minutes" />
+                            <Binding Path="Player.CurrentTime.Seconds" />
+                        </MultiBinding>
+                    </TextBlock.Text>
+                </TextBlock>
+                <TextBlock DockPanel.Dock="Right" Width="50" Foreground="#eee" TextAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock.Text>
+                        <MultiBinding StringFormat="{}{0:D2}:{1:D2}">
+                            <Binding Path="Player.TotalTime.Minutes" />
+                            <Binding Path="Player.TotalTime.Seconds" />
+                        </MultiBinding>
+                    </TextBlock.Text>
+                </TextBlock>
+                <ProgressBar Name="uxProgress" Value="{Binding Player.SeekMilliseconds, Mode=OneWay}" Maximum="{Binding Player.TotalTime.TotalMilliseconds, Mode=OneWay}" Style="{StaticResource ProgressBarStyle}" MouseLeftButtonDown="uxProgressMouseLeftButtonDown" MouseMove="uxProgressMouseMove" />
+            </DockPanel>
+            <TextBlock DockPanel.Dock="Bottom" Text="{Binding Player.CurrentArtist}" Foreground="#eee"></TextBlock>
+            <TextBlock DockPanel.Dock="Bottom" Text="{Binding Player.CurrentTitle}" Foreground="#eee"></TextBlock>
         </DockPanel>
-        <TextBlock DockPanel.Dock="Bottom" Text="{Binding Player.CurrentArtist}" Foreground="#eee"></TextBlock>
-        <TextBlock DockPanel.Dock="Bottom" Text="{Binding Player.CurrentTitle}" Foreground="#eee"></TextBlock>
         <Grid></Grid>
     </DockPanel>
 </Controls:MetroWindow>

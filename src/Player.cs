@@ -2,9 +2,13 @@
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
 using System.Timers;
+using System.Web;
 using Id3;
 using NAudio.Wave;
+using Newtonsoft.Json;
 
 namespace SharpTunes
 {
@@ -15,6 +19,7 @@ namespace SharpTunes
         public string CurrentTitle { get; set; }
         public string CurrentAlbum { get; set; }
         public string CurrentArtist { get; set; }
+        public string CurrentAlbumArt { get; set; }
         public TimeSpan CurrentTime { get; set; }
         public TimeSpan TotalTime { get; set; }
         public double SeekMilliseconds { 
@@ -61,12 +66,27 @@ namespace SharpTunes
                 this.CurrentAlbum = tag.Album.Value;
             }
 
+            this.FindAlbumArt();
+
             this.mp3 = new Mp3FileReader(fileName);
             this.TotalTime = this.mp3.TotalTime;
 
             var volumeStream = new WaveChannel32(mp3);
             this.player.Init(volumeStream);
             return this;
+        }
+
+        public async Task FindAlbumArt()
+        {
+            var client = new HttpClient();
+            var url = "http://ws.audioscrobbler.com/2.0/?method=album.search&album=" +
+                HttpUtility.UrlEncode(this.CurrentArtist) + "+" + 
+                HttpUtility.UrlEncode(this.CurrentAlbum) + 
+                "&api_key=009a482cfc59173fb361faa0b5c49b06&format=json";
+            var json = await client.GetStringAsync(url);
+            var jsonSerializer = new JsonSerializer();
+            dynamic result = jsonSerializer.Deserialize(new JsonTextReader(new StringReader(json)));
+            this.CurrentAlbumArt = result.results.albummatches.album[0].image[1]["#text"];
         }
 
         public Player Play()
