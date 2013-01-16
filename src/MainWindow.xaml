@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
-        Title="MainWindow" Height="350" Width="525">
+        Title="MainWindow" Height="350" Width="525" Background="#222">
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -13,9 +13,45 @@
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Accents/BaseLight.xaml" />
                 <ResourceDictionary Source="Resources/Icons.xaml" />
             </ResourceDictionary.MergedDictionaries>
+
+            <Style x:Key="ProgressBarStyle" TargetType="ProgressBar">
+                <Setter Property="Height" Value="22"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ProgressBar">
+                            <Grid Name="PART_Track" Background="#222">
+                                <Grid Background="#444" Margin="0 10 0 10">
+                                    <Rectangle Name="PART_Indicator" HorizontalAlignment="Left" Fill="#eee" />
+                                </Grid>
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
         </ResourceDictionary>
     </Window.Resources>
-    <Grid>
-        
-    </Grid>
+
+    <DockPanel>
+        <DockPanel DockPanel.Dock="Bottom">
+            <TextBlock DockPanel.Dock="Left" Width="50" Foreground="#eee" TextAlignment="Center" VerticalAlignment="Center">
+                <TextBlock.Text>
+                    <MultiBinding StringFormat="{}{0:D2}:{1:D2}">
+                        <Binding Path="Player.CurrentTime.Minutes" />
+                        <Binding Path="Player.CurrentTime.Seconds" />
+                    </MultiBinding>
+                </TextBlock.Text>
+            </TextBlock>
+            <TextBlock DockPanel.Dock="Right" Width="50" Foreground="#eee" TextAlignment="Center" VerticalAlignment="Center">
+                <TextBlock.Text>
+                    <MultiBinding StringFormat="{}{0:D2}:{1:D2}">
+                        <Binding Path="Player.TotalTime.Minutes" />
+                        <Binding Path="Player.TotalTime.Seconds" />
+                    </MultiBinding>
+                </TextBlock.Text>
+            </TextBlock>
+            <ProgressBar Name="uxProgress" Value="{Binding Player.SeekMilliseconds, Mode=OneWay}" Maximum="{Binding Player.TotalTime.TotalMilliseconds, Mode=OneWay}" Style="{StaticResource ProgressBarStyle}" MouseLeftButtonDown="uxProgressMouseLeftButtonDown" MouseMove="uxProgressMouseMove" />
+        </DockPanel>
+        <Grid></Grid>
+    </DockPanel>
 </Controls:MetroWindow>
