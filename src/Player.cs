@@ -6,7 +6,6 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Web;
-using Id3;
 using NAudio.Wave;
 using Newtonsoft.Json;
 
@@ -16,9 +15,7 @@ namespace SharpTunes
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public string CurrentTitle { get; set; }
-        public string CurrentAlbum { get; set; }
-        public string CurrentArtist { get; set; }
+        public MediaFile CurrentMediaFile { get; set; }
         public string CurrentAlbumArt { get; set; }
         public TimeSpan CurrentTime { get; set; }
         public TimeSpan TotalTime { get; set; }
@@ -42,7 +39,6 @@ namespace SharpTunes
         public Player()
         {
             this.timer.Elapsed += OnTimerElapsed;
-            this.timer.Start();
         }
 
         void OnTimerElapsed(object sender, ElapsedEventArgs e)
@@ -53,24 +49,18 @@ namespace SharpTunes
             }
         }
 
-        public Player Load(string fileName)
+        public Player Load(MediaFile song)
         {
             if (this.mp3 != null)
             {
                 this.mp3.Close();
             }
 
-            using (var tagReader = new Mp3File(fileName))
-            {
-                var tag = tagReader.GetTag(Id3TagFamily.FileStartTag);
-                this.CurrentTitle = tag.Title.Value;
-                this.CurrentArtist = tag.Artists.Values.First();
-                this.CurrentAlbum = tag.Album.Value;
-            }
+            this.CurrentMediaFile = song;
 
             this.FindAlbumArt();
 
-            this.mp3 = new Mp3FileReader(fileName);
+            this.mp3 = new Mp3FileReader(song.Path);
             this.TotalTime = this.mp3.TotalTime;
 
             var volumeStream = new WaveChannel32(mp3);
@@ -82,8 +72,8 @@ namespace SharpTunes
         {
             var client = new HttpClient();
             var url = "http://ws.audioscrobbler.com/2.0/?method=album.search&album=" +
-                HttpUtility.UrlEncode(this.CurrentArtist) + "+" + 
-                HttpUtility.UrlEncode(this.CurrentAlbum) + 
+                HttpUtility.UrlEncode(this.CurrentMediaFile.Artist) + "+" +
+                HttpUtility.UrlEncode(this.CurrentMediaFile.Album) + 
                 "&api_key=009a482cfc59173fb361faa0b5c49b06&format=json";
             var json = await client.GetStringAsync(url);
             var jsonSerializer = new JsonSerializer();
@@ -95,6 +85,7 @@ namespace SharpTunes
         {
             this.player.Play();
             this.IsPlaying = true;
+            this.timer.Start();
             return this;
         }
 
