@@ -8,6 +8,7 @@ using System.Collections.ObjectModel;
 using System.Windows.Data;
 using System.ComponentModel;
 using System;
+using System.Windows;
 
 namespace SharpTunes
 {
@@ -17,11 +18,12 @@ namespace SharpTunes
     public partial class MainWindow : MetroWindow
     {
         ViewModel model = new ViewModel();
+        Player player = new Player();
 
         public MainWindow()
         {
             InitializeComponent();
-            this.model.Player = new Player();
+            this.model.Player = this.player;
             this.model.PropertyChanged += ModelPropertyChanged;
             this.DataContext = model;
             this.LoadSongs();
@@ -31,20 +33,25 @@ namespace SharpTunes
         {
             if (e.PropertyName == "Query")
             {
-                if (!string.IsNullOrWhiteSpace(this.model.Query))
+                this.Search(this.model.Query);
+            }
+        }
+
+        private void Search(string query)
+        {
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                this.model.SongsView.Filter = o =>
                 {
-                    this.model.SongsView.Filter = o =>
-                    {
-                        var media = (o as MediaFile);
-                        var terms = this.model.Query.ToLowerInvariant().Split(new[] { ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                        var targets = new[] { media.Title, media.Artist, media.Album }.Select(t => t.ToLowerInvariant());
-                        return terms.All(term => targets.Any(target => target.Contains(term)));
-                    };
-                }
-                else
-                {
-                    this.model.SongsView.Filter = null;
-                }
+                    var media = (o as MediaFile);
+                    var terms = query.ToLowerInvariant().Split(new[] { ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                    var targets = new[] { media.Title, media.Artist, media.Album }.Select(t => t.ToLowerInvariant());
+                    return terms.All(term => targets.Any(target => target.Contains(term)));
+                };
+            }
+            else
+            {
+                this.model.SongsView.Filter = null;
             }
         }
 
@@ -52,7 +59,7 @@ namespace SharpTunes
         {
             this.model.Songs = Library.GetMedia();
             this.model.SongsView = new ListCollectionView(this.model.Songs);
-            this.model.Player.Load(this.model.Songs.First()).Play();
+            this.player.Load(this.model.Songs.First()).Play();
         }
 
         //
@@ -61,10 +68,10 @@ namespace SharpTunes
 
         private void SetProgressBarValue(double mousePosition)
         {
-            var totalMs = model.Player.TotalTime.TotalMilliseconds;
+            var totalMs = this.player.TotalTime.TotalMilliseconds;
             var ratio = mousePosition / this.uxProgress.ActualWidth;
             var newValue = ratio * totalMs;
-            model.Player.SeekMilliseconds = newValue;
+            this.player.SeekMilliseconds = newValue;
         }
 
         private void uxProgressMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -82,16 +89,24 @@ namespace SharpTunes
             }
         }
 
-        private void uxPlayPauseClickHandler(object sender, System.Windows.RoutedEventArgs e)
+        private void uxPlayPauseClickHandler(object sender, RoutedEventArgs e)
         {
-            if (model.Player.IsPlaying)
+            if (this.player.IsPlaying)
             {
-                model.Player.Pause();
+                this.player.Pause();
             }
             else
             {
-                model.Player.Play();
+                this.player.Play();
             }
+        }
+
+        private void uxLibraryRowSelectedHandler(object sender, RoutedEventArgs e)
+        {
+            var mediaFile = uxLibrary.SelectedItem as MediaFile;
+            if (mediaFile == null) return;
+
+            this.player.Load(mediaFile).Play();
         }
     }
 }

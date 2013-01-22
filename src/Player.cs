@@ -70,7 +70,8 @@ namespace SharpTunes
 
         public async void FindAlbumArt()
         {
-            this.CurrentAlbumArt = await Library.FindAlbumArt(this.CurrentMediaFile);
+            this.CurrentAlbumArt = null;
+            this.CurrentAlbumArt = await Library.GetAlbumArt(this.CurrentMediaFile);
         }
 
         public Player Play()

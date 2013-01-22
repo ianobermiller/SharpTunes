@@ -5,8 +5,10 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
+using Microsoft.CSharp.RuntimeBinder;
 using Microsoft.WindowsAPICodePack.Shell;
 using Newtonsoft.Json;
 
@@ -14,7 +16,9 @@ namespace SharpTunes
 {
     public class Library
     {
-        private static string libraryCachePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SharpTunes", "library.json");
+        private static string dataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SharpTunes");
+        private static string libraryCachePath = Path.Combine(dataFolder, "library.json");
+        private static string coverArtFolder = Path.Combine(dataFolder, "coverart");
         private static JsonSerializer serializer = new JsonSerializer();
 
         public static ObservableCollection<MediaFile> GetMedia()
@@ -82,16 +86,62 @@ namespace SharpTunes
             return media;
         }
 
-        public static async Task<string> FindAlbumArt(MediaFile media)
+        public static async Task<string> GetAlbumArt(MediaFile media)
+        {
+            var filePath = Path.Combine(coverArtFolder, MakePathSafe(media.Artist) + "_-_" + MakePathSafe(media.Album) + ".jpg");
+            if (!File.Exists(filePath))
+            {
+                var coverArtUrl = await GetAlbumArtFromLastFm(media);
+                coverArtUrl = coverArtUrl ?? GetAlbumArtFromInteractivePlaylist(media);
+                if (!string.IsNullOrWhiteSpace(coverArtUrl))
+                {
+                    var bytes = await new HttpClient().GetByteArrayAsync(coverArtUrl);
+                    if (!Directory.Exists(coverArtFolder))
+                    {
+                        Directory.CreateDirectory(coverArtFolder);
+                    }
+                    File.WriteAllBytes(filePath, bytes);
+                }
+            }
+            
+            return filePath;
+        }
+
+        private static string GetAlbumArtFromInteractivePlaylist(MediaFile media)
+        {
+            // ipfam is media, ipfal is large
+            return "http://interactiveplaylist.com/ipfam?album=" +
+                StripAndEncode(media.Album) + "&artist=" +
+                StripAndEncode(media.Artist);
+        }
+
+        private static async Task<string> GetAlbumArtFromLastFm(MediaFile media)
         {
             var client = new HttpClient();
             var url = "http://ws.audioscrobbler.com/2.0/?method=album.search&album=" +
-                HttpUtility.UrlEncode(media.Artist) + "+" +
-                HttpUtility.UrlEncode(media.Album) +
+                StripAndEncode(media.Artist) + "+" +
+                StripAndEncode(media.Album) +
                 "&api_key=009a482cfc59173fb361faa0b5c49b06&format=json";
             var json = await client.GetStringAsync(url);
             dynamic result = JsonConvert.DeserializeObject(json);
-            return result.results.albummatches.album[0].image[1]["#text"];
+            try
+            {
+                return result.results.albummatches.album[0].image[1]["#text"];
+            }
+            catch
+            {
+                return null;
+            }
+        }
+        
+        private static string MakePathSafe(string text)
+        {
+            return new Regex(@"[^\w]").Replace(text, "_");
+        }
+
+        private static string StripAndEncode(string text)
+        {
+            return HttpUtility.UrlEncode(new Regex(@"[^\w\s]{2,}").Replace(text, " "));
         }
     }
 }
