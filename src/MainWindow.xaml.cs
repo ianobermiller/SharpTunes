@@ -7,6 +7,7 @@ using System.Linq;
 using System.Collections.ObjectModel;
 using System.Windows.Data;
 using System.ComponentModel;
+using System;
 
 namespace SharpTunes
 {
@@ -35,7 +36,9 @@ namespace SharpTunes
                     this.model.SongsView.Filter = o =>
                     {
                         var media = (o as MediaFile);
-                        return media.Title.ToLowerInvariant().Contains(this.model.Query.ToLowerInvariant());
+                        var terms = this.model.Query.ToLowerInvariant().Split(new[] { ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                        var targets = new[] { media.Title, media.Artist, media.Album }.Select(t => t.ToLowerInvariant());
+                        return terms.All(term => targets.Any(target => target.Contains(term)));
                     };
                 }
                 else
