@@ -91,8 +91,7 @@ namespace SharpTunes
             var filePath = Path.Combine(coverArtFolder, MakePathSafe(media.Artist) + "_-_" + MakePathSafe(media.Album) + ".jpg");
             if (!File.Exists(filePath))
             {
-                var coverArtUrl = await GetAlbumArtFromLastFm(media);
-                coverArtUrl = coverArtUrl ?? GetAlbumArtFromInteractivePlaylist(media);
+                var coverArtUrl = await GetAlbumArtFromGoogleImages(media);
                 if (!string.IsNullOrWhiteSpace(coverArtUrl))
                 {
                     var bytes = await new HttpClient().GetByteArrayAsync(coverArtUrl);
@@ -105,6 +104,24 @@ namespace SharpTunes
             }
             
             return filePath;
+        }
+
+        private static async Task<string> GetAlbumArtFromGoogleImages(MediaFile media)
+        {
+            var client = new HttpClient();
+            var url = "https://ajax.googleapis.com/ajax/services/search/images?v=1.0&q=" +
+                HttpUtility.UrlEncode(media.Artist) + "+" +
+                HttpUtility.UrlEncode(media.Album) + "+cover";
+            var json = await client.GetStringAsync(url);
+            dynamic result = JsonConvert.DeserializeObject(json);
+            try
+            {
+                return result.responseData.results[0].tbUrl;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         private static string GetAlbumArtFromInteractivePlaylist(MediaFile media)
