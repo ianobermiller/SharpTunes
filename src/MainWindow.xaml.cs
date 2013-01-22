@@ -20,8 +20,6 @@ namespace SharpTunes
         public MainWindow()
         {
             InitializeComponent();
-            this.model.Songs = new ObservableCollection<MediaFile>();
-            this.model.SongsView = new CollectionView(this.model.Songs);
             this.model.Player = new Player();
             this.model.PropertyChanged += ModelPropertyChanged;
             this.DataContext = model;
@@ -36,7 +34,8 @@ namespace SharpTunes
                 {
                     this.model.SongsView.Filter = o =>
                     {
-                        return (o as MediaFile).Title.ToLowerInvariant().Contains(this.model.Query.ToLowerInvariant());
+                        var media = (o as MediaFile);
+                        return media.Title.ToLowerInvariant().Contains(this.model.Query.ToLowerInvariant());
                     };
                 }
                 else
@@ -49,6 +48,7 @@ namespace SharpTunes
         private void LoadSongs()
         {
             this.model.Songs = Library.GetMedia();
+            this.model.SongsView = new ListCollectionView(this.model.Songs);
             this.model.Player.Load(this.model.Songs.First()).Play();
         }
 

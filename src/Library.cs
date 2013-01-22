@@ -82,12 +82,12 @@ namespace SharpTunes
             return media;
         }
 
-        public static async Task<string> FindAlbumArt()
+        public static async Task<string> FindAlbumArt(MediaFile media)
         {
             var client = new HttpClient();
             var url = "http://ws.audioscrobbler.com/2.0/?method=album.search&album=" +
-                HttpUtility.UrlEncode(this.CurrentMediaFile.Artist) + "+" +
-                HttpUtility.UrlEncode(this.CurrentMediaFile.Album) +
+                HttpUtility.UrlEncode(media.Artist) + "+" +
+                HttpUtility.UrlEncode(media.Album) +
                 "&api_key=009a482cfc59173fb361faa0b5c49b06&format=json";
             var json = await client.GetStringAsync(url);
             dynamic result = JsonConvert.DeserializeObject(json);

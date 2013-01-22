@@ -84,8 +84,8 @@
             <TextBlock DockPanel.Dock="Bottom" Text="{Binding Player.CurrentMediaFile.Artist}" Height="20" FontSize="14" Margin="10 0 0 0"/>
             <TextBlock DockPanel.Dock="Bottom" Text="{Binding Player.CurrentMediaFile.Title}" Height="20" FontSize="14" Margin="10 0 0 0"/>
         </DockPanel>
-        <TextBox DockPanel.Dock="Top" Text="{Binding Query}"></TextBox>
-        <DataGrid ItemsSource="{Binding Songs}" AutoGenerateColumns="False" CanUserAddRows="False">
+        <TextBox DockPanel.Dock="Top" Text="{Binding Query, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"></TextBox>
+        <DataGrid ItemsSource="{Binding SongsView}" AutoGenerateColumns="False" CanUserAddRows="False">
             <DataGrid.Columns>
                 <DataGridTextColumn Binding="{Binding Title}" Header="Title" Width="2*" />
                 <DataGridTextColumn Binding="{Binding Artist}" Header="Artist" Width="1*" />
