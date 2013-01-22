@@ -5,6 +5,8 @@ using MahApps.Metro.Controls;
 using Microsoft.WindowsAPICodePack.Shell;
 using System.Linq;
 using System.Collections.ObjectModel;
+using System.Windows.Data;
+using System.ComponentModel;
 
 namespace SharpTunes
 {
@@ -19,44 +21,34 @@ namespace SharpTunes
         {
             InitializeComponent();
             this.model.Songs = new ObservableCollection<MediaFile>();
+            this.model.SongsView = new CollectionView(this.model.Songs);
             this.model.Player = new Player();
+            this.model.PropertyChanged += ModelPropertyChanged;
             this.DataContext = model;
             this.LoadSongs();
         }
 
-        private void LoadSongs()
+        void ModelPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            using (ShellLibrary shellLibrary = ShellLibrary.Load("Music", true))
+            if (e.PropertyName == "Query")
             {
-                var mp3s = shellLibrary.SelectMany((ShellFileSystemFolder f) => Directory.EnumerateFiles(f.Path, "*.mp3", SearchOption.AllDirectories));
-
-                foreach (var path in mp3s)
+                if (!string.IsNullOrWhiteSpace(this.model.Query))
                 {
-                    try
+                    this.model.SongsView.Filter = o =>
                     {
-                        using (var file = TagLib.File.Create(path))
-                        {
-                            var song = new MediaFile()
-                            {
-                                Title = file.Tag.Title,
-                                Artist = file.Tag.FirstAlbumArtist ?? file.Tag.FirstPerformer,
-                                Album = file.Tag.Album,
-                                Path = path
-                            };
-                            this.model.Songs.Add(song);
-                        }
-                    }
-                    catch
-                    {
-                        var song = new MediaFile()
-                        {
-                            Path = path,
-                            HasError = true
-                        };
-                        this.model.Songs.Add(song);
-                    }
+                        return (o as MediaFile).Title.ToLowerInvariant().Contains(this.model.Query.ToLowerInvariant());
+                    };
+                }
+                else
+                {
+                    this.model.SongsView.Filter = null;
                 }
             }
+        }
+
+        private void LoadSongs()
+        {
+            this.model.Songs = Library.GetMedia();
             this.model.Player.Load(this.model.Songs.First()).Play();
         }
 

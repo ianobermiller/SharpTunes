@@ -4,7 +4,7 @@
         xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
         xmlns:my="clr-namespace:SharpTunes"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" x:Class="SharpTunes.MainWindow"
-        Title="SharpTunes" Width="525" d:DesignHeight="309">
+        Title="SharpTunes" Width="525" Height="400">
     <Controls:MetroWindow.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -84,6 +84,13 @@
             <TextBlock DockPanel.Dock="Bottom" Text="{Binding Player.CurrentMediaFile.Artist}" Height="20" FontSize="14" Margin="10 0 0 0"/>
             <TextBlock DockPanel.Dock="Bottom" Text="{Binding Player.CurrentMediaFile.Title}" Height="20" FontSize="14" Margin="10 0 0 0"/>
         </DockPanel>
-        <DataGrid ItemsSource="{Binding Songs}" />
+        <TextBox DockPanel.Dock="Top" Text="{Binding Query}"></TextBox>
+        <DataGrid ItemsSource="{Binding Songs}" AutoGenerateColumns="False" CanUserAddRows="False">
+            <DataGrid.Columns>
+                <DataGridTextColumn Binding="{Binding Title}" Header="Title" Width="2*" />
+                <DataGridTextColumn Binding="{Binding Artist}" Header="Artist" Width="1*" />
+                <DataGridTextColumn Binding="{Binding Album}" Header="Album" Width="1*" />
+            </DataGrid.Columns>
+        </DataGrid>
     </DockPanel>
 </Controls:MetroWindow>
