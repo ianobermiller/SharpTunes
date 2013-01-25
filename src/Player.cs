@@ -1,11 +1,13 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Web;
+using System.Windows.Data;
 using NAudio.Wave;
 using Newtonsoft.Json;
 
@@ -14,6 +16,7 @@ namespace SharpTunes
     class Player : INotifyPropertyChanged, IDisposable
     {
         public event PropertyChangedEventHandler PropertyChanged;
+        public event Action MediaFileFinished = () => {};
 
         public MediaFile CurrentMediaFile { get; set; }
         public string CurrentAlbumArt { get; set; }
@@ -41,11 +44,22 @@ namespace SharpTunes
             this.timer.Elapsed += OnTimerElapsed;
         }
 
+        void OnPlaybackStopped(object sender, StoppedEventArgs e)
+        {
+            // For debugging
+        }
+
         void OnTimerElapsed(object sender, ElapsedEventArgs e)
         {
             if (this.mp3 != null)
             {
                 this.CurrentTime = this.mp3.CurrentTime;
+
+                if (this.IsPlaying && this.CurrentTime == this.TotalTime)
+                {
+                    this.Pause();
+                    this.MediaFileFinished();
+                }
             }
         }
 
@@ -64,6 +78,8 @@ namespace SharpTunes
             this.TotalTime = this.mp3.TotalTime;
 
             var volumeStream = new WaveChannel32(mp3);
+            this.player = new WaveOutEvent();
+            this.player.PlaybackStopped += OnPlaybackStopped;
             this.player.Init(volumeStream);
             return this;
         }

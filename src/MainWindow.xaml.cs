@@ -9,6 +9,7 @@ using System.Windows.Data;
 using System.ComponentModel;
 using System;
 using System.Windows;
+using System.Windows.Interop;
 
 namespace SharpTunes
 {
@@ -17,6 +18,7 @@ namespace SharpTunes
     /// </summary>
     public partial class MainWindow : MetroWindow
     {
+        Random random = new Random(Environment.TickCount);
         ViewModel model = new ViewModel();
         Player player = new Player();
 
@@ -26,7 +28,62 @@ namespace SharpTunes
             this.model.Player = this.player;
             this.model.PropertyChanged += ModelPropertyChanged;
             this.DataContext = model;
+            this.player.MediaFileFinished += OnMediaFileFinished;
             this.LoadSongs();
+            this.Loaded += OnLoaded;
+        }
+
+        void OnLoaded(object sender, RoutedEventArgs e)
+        {
+            HwndSource source = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
+            source.AddHook(new HwndSourceHook(WndProc));
+        }
+
+        private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            if (msg == 0x319)   // WM_APPCOMMAND message
+            {
+                // extract cmd from LPARAM (as GET_APPCOMMAND_LPARAM macro does)
+                int cmd = (int)((uint)lParam >> 16 & ~0xf000);
+                switch (cmd)
+                {
+                    case 11:  // APPCOMMAND_MEDIA_NEXTTRACK
+                        handled = true;
+                        break;
+                    case 12:  // APPCOMMAND_MEDIA_PREVIOUSTRACK
+                        handled = true;
+                        break;
+                    case 14:  // APPCOMMAND_MEDIA_PLAY_PAUSE
+                        this.PlayPause();
+                        handled = true;
+                        break;
+                    default:
+                        break;
+                }
+            }
+            return IntPtr.Zero;
+        }
+
+        void OnMediaFileFinished()
+        {
+            // Play something random from the current list
+            var list = this.model.SongsView.Cast<MediaFile>().ToArray();
+            var currentMedia = this.player.CurrentMediaFile;
+
+            if (list.Length <= 1)
+            {
+                return;
+            }
+
+            while (true)
+            {
+                var next = list[this.random.Next(0, list.Length)];
+                if (next != currentMedia)
+                {
+                    player.Load(next).Play();
+                    return;
+                }
+            }
         }
 
         void ModelPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -59,7 +116,18 @@ namespace SharpTunes
         {
             this.model.Songs = Library.GetMedia();
             this.model.SongsView = new ListCollectionView(this.model.Songs);
-            this.player.Load(this.model.Songs.First()).Play();
+        }
+
+        private void PlayPause()
+        {
+            if (this.player.IsPlaying)
+            {
+                this.player.Pause();
+            }
+            else
+            {
+                this.player.Play();
+            }
         }
 
         //
@@ -91,14 +159,7 @@ namespace SharpTunes
 
         private void uxPlayPauseClickHandler(object sender, RoutedEventArgs e)
         {
-            if (this.player.IsPlaying)
-            {
-                this.player.Pause();
-            }
-            else
-            {
-                this.player.Play();
-            }
+            this.PlayPause();
         }
 
         private void uxLibraryRowSelectedHandler(object sender, RoutedEventArgs e)
